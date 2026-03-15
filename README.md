@@ -2,13 +2,43 @@
 
 Slap your laptop. It yells back.
 
+## Prerequisites
+
+### Linux (Ubuntu/Debian)
+
+```bash
+sudo apt install portaudio19-dev libasound2-dev
+```
+
+### Linux (Fedora)
+
+```bash
+sudo dnf install portaudio-devel alsa-lib-devel
+```
+
+### macOS
+
+```bash
+brew install portaudio
+```
+
+### Windows
+
+PortAudio is bundled with the Go package. No extra installation needed.
+
 ## Install
 
 ```bash
+# Clone the repository
+git clone https://github.com/kushalshah0/mic-spank.git
+cd mic-spank
+
+# Download dependencies
+go mod download
+
+# Build
 go build -o mic-spank
 ```
-
-Requires: PortAudio (`sudo apt install portaudio19-dev`)
 
 ## Run
 
@@ -46,4 +76,19 @@ Requires: PortAudio (`sudo apt install portaudio19-dev`)
 
 ## Audio
 
-Place `.mp3` files in `audio/pain/`, `audio/sexy/`, or `audio/halo/`.
+Place `.mp3` files in `audio/pain/`, `audio/sexy/`, or `audio/halo/`. Clips are sorted alphabetically and selected based on the active mode.
+
+## Troubleshooting
+
+### No microphone input
+- Check available devices: `./mic-spank --list-devices`
+- Specify device: `./mic-spank --device="Your Microphone Name"`
+
+### Detection not working
+- Run with `--debug` to see real-time RMS values
+- Lower sensitivity: `--sensitivity=1.0`
+- Adjust thresholds as needed
+
+### Audio playback issues
+- Ensure PulseAudio or PipeWire is running
+- Check system volume settings
