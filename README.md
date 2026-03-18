@@ -2,6 +2,21 @@
 
 Slap your laptop. It yells back.
 
+## How It Works
+
+The app listens to your microphone and runs incoming audio through a 4-stage detection pipeline:
+
+```
+Microphone → RMS Floor → STA/LTA Ratio → Crest Factor → Zero-Crossing Rate → Play Response
+```
+
+1. **RMS Floor**: Rejects frames that are too quiet
+2. **STA/LTA**: Detects sudden energy spikes (Short-Term vs Long-Term average)
+3. **Crest Factor**: Identifies impulsive sounds (high peak-to-RMS ratio)
+4. **Zero-Crossing Rate**: Distinguishes noise-like slaps from speech/music
+
+On startup, the detector calibrates its noise floor for 2 seconds before enabling detection.
+
 ## Prerequisites
 
 ### Linux (Ubuntu/Debian)
@@ -25,6 +40,10 @@ brew install portaudio
 ### Windows
 
 PortAudio is bundled with the Go package. No extra installation needed.
+
+## Requirements
+
+- Go 1.24 or later
 
 ## Install
 
@@ -56,7 +75,8 @@ go build -o mic-spank
 |------|---------|-------------|
 | `--mode` | `pain` | Response mode: pain, sexy, halo, custom |
 | `--audio` | auto | Custom audio directory |
-| `--sensitivity` | 1.5 | Detection threshold (lower = more sensitive) |
+| `--device` | default | Audio input device name |
+| `--sensitivity` | 1.5 | STA/LTA threshold (lower = more sensitive) |
 | `--rms-floor` | 0.02 | Minimum RMS to consider |
 | `--crest` | 1.5 | Minimum crest factor |
 | `--hf-ratio` | 0.05 | High-frequency ratio threshold |
@@ -69,26 +89,48 @@ go build -o mic-spank
 
 ## Modes
 
-- **pain**: Random pain sound on each slap
-- **sexy**: Escalates through clips based on slap frequency
-- **halo**: Selects clip based on slap intensity
-- **custom**: Random from user-provided directory
+| Mode | Behavior |
+|------|----------|
+| **pain** | Plays a random pain sound on each slap |
+| **sexy** | Escalates through clips based on slap frequency within a 5-minute rolling window |
+| **halo** | Selects clip based on detected slap intensity (0-100%) |
+| **custom** | Plays random clip from user-provided directory |
 
 ## Audio
 
 Place `.mp3` files in `audio/pain/`, `audio/sexy/`, or `audio/halo/`. Clips are sorted alphabetically and selected based on the active mode.
 
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌───────────┐     ┌─────────┐
+│  capture/   │────▶│   detector/  │────▶│  modes/   │────▶│ player/ │
+│  Microphone │     │  4-stage DSP │     │  Selection│     │  MP3    │
+│  (PortAudio)│     │  (STA/LTA)   │     │           │     │         │
+└─────────────┘     └──────────────┘     └───────────┘     └─────────┘
+       │                  │                                       │
+       └──────────────────┴───────────────────────────────────────┘
+                     main.go (orchestration + CLI)
+```
+
 ## Troubleshooting
 
 ### No microphone input
 - Check available devices: `./mic-spank --list-devices`
-- Specify device: `./mic-spank --device="Your Microphone Name"`
+- Specify a device: `./mic-spank --device="Your Microphone Name"`
 
 ### Detection not working
 - Run with `--debug` to see real-time RMS values
-- Lower sensitivity: `--sensitivity=1.0`
-- Adjust thresholds as needed
+- Lower sensitivity: `./mic-spank --sensitivity=1.0`
+- Adjust `--rms-floor` and `--crest` thresholds as needed
 
 ### Audio playback issues
 - Ensure PulseAudio or PipeWire is running
 - Check system volume settings
+
+### ALSA warnings on Linux
+- Use `--quiet` to suppress warnings
+- Or run: `echo "pcm.!default { type null }" > ~/.asoundrc`
+
+### Permission denied on microphone
+- On Linux, you may need to add yourself to the `audio` group: `sudo usermod -aG audio $USER`
