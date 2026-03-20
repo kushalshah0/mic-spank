@@ -63,7 +63,6 @@ go build -o mic-spank
 
 ```bash
 ./mic-spank                    # pain mode (default)
-./mic-spank --mode=sexy       # escalating responses
 ./mic-spank --mode=halo       # intensity-based responses
 ./mic-spank --mode=custom --audio=/path/to/clips
 ./mic-spank --quiet           # suppress ALSA warnings
@@ -73,7 +72,7 @@ go build -o mic-spank
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--mode` | `pain` | Response mode: pain, sexy, halo, custom |
+| `--mode` | `pain` | Response mode: pain, halo, custom |
 | `--audio` | auto | Custom audio directory |
 | `--device` | default | Audio input device name |
 | `--sensitivity` | 1.5 | STA/LTA threshold (lower = more sensitive) |
@@ -92,13 +91,12 @@ go build -o mic-spank
 | Mode | Behavior |
 |------|----------|
 | **pain** | Plays a random pain sound on each slap |
-| **sexy** | Escalates through clips based on slap frequency within a 5-minute rolling window |
 | **halo** | Selects clip based on detected slap intensity (0-100%) |
 | **custom** | Plays random clip from user-provided directory |
 
 ## Audio
 
-Place `.mp3` files in `audio/pain/`, `audio/sexy/`, or `audio/halo/`. Clips are sorted alphabetically and selected based on the active mode.
+Place `.mp3` files in `audio/pain/` or `audio/halo/`. Clips are sorted alphabetically and selected based on the active mode.
 
 ## Architecture
 
